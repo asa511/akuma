@@ -72,7 +72,20 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 public class Daemon {
-    /**
+	private String pidPath;
+	private String pidFile;
+
+	public Daemon() {
+		pidPath = "/var/run/akuma";
+		pidFile = "daemon.pid";
+	}
+	
+	public Daemon(String pidPath, String pidFile) {
+		this.pidPath = pidPath;
+		this.pidFile = pidFile;
+	}
+
+	/**
      * Do all the necessary steps in one go.
      *
      * @param daemonize
@@ -147,7 +160,7 @@ public class Daemon {
      * The daemon's PID is written to the file <code>/var/run/daemon.pid</code>.
      */
     public void init() throws Exception {
-        init("/var/run/daemon.pid");
+        init(pidFile);
     }
     
     /**
@@ -163,7 +176,9 @@ public class Daemon {
         closeDescriptors();
 
         chdirToRoot();
-        if (pidFile != null) writePidFile(pidFile);
+        if (pidFile != null) {
+        	writePidFile(pidFile);
+        }
     }
 
     /**
@@ -198,7 +213,12 @@ public class Daemon {
      */
     protected void writePidFile(String pidFile) throws IOException {
         try {
-            FileWriter fw = new FileWriter(pidFile);
+        	File folder = new File(pidPath);
+        	if (!folder.exists()) {
+        		folder.mkdirs();
+        	}
+        	File file = new File(folder, pidFile);
+            FileWriter fw = new FileWriter(file);
             fw.write(String.valueOf(LIBC.getpid()));
             fw.close();
         } catch (IOException e) {
